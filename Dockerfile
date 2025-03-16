@@ -1,32 +1,26 @@
-# Gunakan image base Go untuk membangun aplikasi
+# Build stage (Menggunakan Go 1.24)
 FROM golang:1.24 AS builder
 
-# Set working directory di dalam container
+# Set working directory
 WORKDIR /app
 
-# Copy dependency files terlebih dahulu untuk caching lebih baik
-COPY go.mod go.sum ./
+# Copy semua file proyek
+COPY . .
 
 # Download dependencies
 RUN go mod tidy
 
-# Copy semua file source code ke dalam container
-COPY . .
+# Build static binary tanpa CGO
+RUN CGO_ENABLED=0 go build -o lapar_backend
 
-# Build aplikasi dengan nama 'lapar_backend'
-RUN go build -o lapar_backend
-
-# Gunakan image ringan untuk menjalankan aplikasi
-FROM gcr.io/distroless/base-debian11
+# Final stage: Menggunakan Alpine yang ringan
+FROM alpine:latest
 
 # Set working directory
 WORKDIR /root/
 
-# Copy binary dari tahap build
+# Copy binary hasil build
 COPY --from=builder /app/lapar_backend .
 
-# Tentukan port aplikasi (Opsional, tetapi direkomendasikan)
-EXPOSE 2020
-
-# Jalankan aplikasi dengan ENTRYPOINT
-ENTRYPOINT ["/root/lapar_backend"]
+# Jalankan aplikasi
+CMD ["/root/lapar_backend"]
