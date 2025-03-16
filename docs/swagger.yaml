@@ -1,0 +1,148 @@
+basePath: /
+definitions:
+  handlers.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handlers.RegisterRequest:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      invite_token:
+        type: string
+      password:
+        type: string
+    type: object
+host: localhost:2020
+info:
+  contact: {}
+  description: Dokumentasi API untuk aplikasi parenting Lapar.
+  title: Lapar Backend API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentikasi pengguna dengan email dan password
+      parameters:
+      - description: Data login pengguna
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login berhasil, mengembalikan token
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Permintaan tidak valid
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Email atau password salah
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Kesalahan server
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Mendaftarkan akun orang tua baru
+      parameters:
+      - description: Data pendaftaran orang tua
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Berhasil mendaftar
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Permintaan tidak valid
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Kesalahan server
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register Parent
+      tags:
+      - Auth
+  /auth/register-child:
+    post:
+      consumes:
+      - application/json
+      description: Mendaftarkan anak berdasarkan undangan dari orang tua
+      parameters:
+      - description: Token undangan
+        in: query
+        name: invite
+        required: true
+        type: string
+      - description: Data anak yang akan didaftarkan
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register Child
+      tags:
+      - Auth
+swagger: "2.0"
