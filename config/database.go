@@ -26,8 +26,7 @@ func LoadConfig() {
 	// Ambil JWT_SECRET dari environment
 	JWTSecret = os.Getenv("JWT_SECRET")
 	if JWTSecret == "" {
-		log.Println("JWT_SECRET is not set! Using default value (NOT SECURE)")
-		JWTSecret = "QCkQy4sOjvlyURniSFrJSGkHM5zEBuS6"
+		log.Fatal("JWT_SECRET is required but not set!")
 	}
 }
 
