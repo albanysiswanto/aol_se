@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/gofiber/swagger"
 	"log"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
-	//"github.com/gofiber/swagger" // Fiber Swagger middleware
+	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
 	"lapar_backend/config"
 	_ "lapar_backend/docs" // Import docs yang akan dibuat nanti
@@ -20,24 +19,26 @@ import (
 // @BasePath /
 
 func main() {
-	// Load environment variables
-	config.LoadConfig()
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using Railway environment variables")
 	}
-	
+
+	config.LoadConfig()
 	config.ConnectDatabase()
 
 	app := fiber.New()
 
+	// Swagger Docs
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
+	// Setup Routes
 	routes.SetupRoutes(app)
 
+	// Baca port dari environment variable
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "2020"
 	}
+	log.Println("Server running on port:", port)
 	log.Fatal(app.Listen(":" + port))
 }
