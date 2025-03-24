@@ -1,11 +1,10 @@
 package middleware
 
 import (
-	"log"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"lapar_backend/config"
+	"log"
 )
 
 func JWTMiddleware() fiber.Handler {

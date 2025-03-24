@@ -15,4 +15,9 @@ func SetupRoutes(app *fiber.App) {
 	auth.Post("/register-child", handlers.RegisterChildHandler)
 
 	api.Post("/invite", handlers.InviteChildHandler)
+
+	// Route Kuis
+	quizGroup := app.Group("/quiz", middleware.JWTMiddleware())
+	quizGroup.Post("/create", handlers.CreateQuiz)
+	quizGroup.Post("/add-question", handlers.AddQuestionToQuiz)
 }
