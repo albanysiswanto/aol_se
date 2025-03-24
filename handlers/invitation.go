@@ -11,6 +11,19 @@ import (
 	"lapar_backend/config"
 )
 
+// InviteChildHandler godoc
+// @Summary Invite a child
+// @Description Send an invitation link to a child via email
+// @Tags Invitations
+// @Accept json
+// @Produce json
+// @Param request body map[string]string true "Child Email Request"
+// @Success 200 {object} map[string]string "Invitation sent successfully"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 409 {object} map[string]string "Email already registered"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /api/invite [post]
 func InviteChildHandler(c *fiber.Ctx) error {
 	parentID, ok := c.Locals("userID").(string)
 	if !ok || parentID == "" {

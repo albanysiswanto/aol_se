@@ -1,5 +1,32 @@
 basePath: /
 definitions:
+  handlers.AddQuestionRequest:
+    properties:
+      correct_answer:
+        type: string
+      options:
+        items:
+          type: string
+        type: array
+      question:
+        type: string
+      quiz_id:
+        type: string
+    required:
+    - correct_answer
+    - options
+    - question
+    - quiz_id
+    type: object
+  handlers.CreateQuizRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
   handlers.LoginRequest:
     properties:
       email:
@@ -20,13 +47,170 @@ definitions:
       password:
         type: string
     type: object
+  models.QuestionResponseInvalidInput:
+    properties:
+      error:
+        example: Invalid input
+        type: string
+    type: object
+  models.QuestionResponseSuccess:
+    properties:
+      message:
+        example: Question added successfully
+        type: string
+      quiz_id:
+        example: 12345...
+        type: string
+    type: object
+  models.QuestionResponseUnauthorized:
+    properties:
+      error:
+        example: Unauthorized access
+        type: string
+    type: object
+  models.QuizResponse:
+    properties:
+      message:
+        example: Quiz created successfully
+        type: string
+      quiz_id:
+        example: "12345"
+        type: string
+    type: object
+  models.QuizResponseInvalidInput:
+    properties:
+      error:
+        example: Invalid input
+        type: string
+    type: object
+  models.QuizResponseUnauthorized:
+    properties:
+      error:
+        example: Unauthorized access
+        type: string
+    type: object
 host: localhost:2020
 info:
   contact: {}
   description: Dokumentasi API untuk aplikasi parenting Lapar.
   title: Lapar Backend API
-  version: "1.0"
+  version: "1.1"
 paths:
+  /api/invite:
+    post:
+      consumes:
+      - application/json
+      description: Send an invitation link to a child via email
+      parameters:
+      - description: Child Email Request
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invitation sent successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Email already registered
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Invite a child
+      tags:
+      - Invitations
+  /api/quizzes:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows a logged-in parent to create a new quiz.
+      parameters:
+      - description: Menambahkan Kuis
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateQuizRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Quiz created successfully
+          schema:
+            $ref: '#/definitions/models.QuizResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/models.QuizResponseInvalidInput'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.QuizResponseUnauthorized'
+      security:
+      - BearerAuth: []
+      summary: Create a new quiz
+      tags:
+      - Quizzes
+  /api/quizzes/questions:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint allows a logged-in parent to add a question to an
+        existing quiz.
+      parameters:
+      - description: Menambahkan Pertanyaan berdasarkan Kuis ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AddQuestionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Question added successfully
+          schema:
+            $ref: '#/definitions/models.QuestionResponseSuccess'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/models.QuestionResponseInvalidInput'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.QuestionResponseUnauthorized'
+      security:
+      - BearerAuth: []
+      summary: Add a question to a quiz
+      tags:
+      - Quiz Questions
   /auth/login:
     post:
       consumes:

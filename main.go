@@ -14,7 +14,7 @@ import (
 )
 
 // @title Lapar Backend API
-// @version 1.0
+// @version 1.1
 // @description Dokumentasi API untuk aplikasi parenting Lapar.
 // @host localhost:2020
 // @BasePath /
