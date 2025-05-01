@@ -3,17 +3,19 @@ package handlers
 import (
 	"database/sql"
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"net/mail"
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
+
+	"lapar_backend/config"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"lapar_backend/config"
 )
 
 func calculateAge(birthDateStr string) (int, error) {
@@ -67,15 +69,22 @@ type LoginRequest struct {
 // @Failure 500 {object} map[string]string "Kesalahan server"
 // @Router /auth/login [post]
 func LoginHandler(c *fiber.Ctx) error {
-	//type LoginRequest struct {
-	//	Email    string `json:"email"`
-	//	Password string `json:"password"`
-	//}
-
 	var req LoginRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
+
+	req.Email = strings.ToLower(req.Email)
+
+	if req.Email == "" || req.Password == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Email and password are required"})
+	}
+
+	if _, err := mail.ParseAddress(req.Email); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid email format"})
+	}
+
+	log.Printf("Login attempt for email: %s", req.Email)
 
 	var user struct {
 		ID       string
@@ -91,17 +100,19 @@ func LoginHandler(c *fiber.Ctx) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid email or password"})
 		}
-		log.Println("Database error:", err)
+		log.Println("Database error during login:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
+		time.Sleep(1 * time.Second) // buat brute force protection
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid email or password"})
 	}
 
 	token, err := GenerateJWT(user.ID, user.Role)
 	if err != nil {
+		log.Println("JWT generation error:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not generate token"})
 	}
 
@@ -162,7 +173,7 @@ func RegisterHandler(c *fiber.Ctx) error {
 	}
 
 	_, err = config.DB.Exec(`
-		INSERT INTO profile (id, full_name, email, password, birth_date, role, parent_id) 
+		INSERT INTO profile (id, full_name, email, password, birth_date, role, parent_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		uuid.New().String(), req.FullName, strings.ToLower(req.Email), hashedPassword, req.BirthDate, role, parentID,
 	)
@@ -234,7 +245,7 @@ func RegisterChildHandler(c *fiber.Ctx) error {
 	}
 
 	_, err = config.DB.Exec(`
-		INSERT INTO profile (id, full_name, email, password, birth_date, role, parent_id) 
+		INSERT INTO profile (id, full_name, email, password, birth_date, role, parent_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		uuid.New().String(), req.FullName, strings.ToLower(req.Email), hashedPassword, req.BirthDate, "Child", parentID,
 	)
