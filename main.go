@@ -1,16 +1,20 @@
 package main
 
 import (
-	"github.com/gofiber/swagger"
 	"log"
 	"os"
 
+	"github.com/gofiber/swagger"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+
 	//"github.com/gofiber/swagger" // Fiber Swagger middleware
-	"github.com/joho/godotenv"
 	"lapar_backend/config"
 	_ "lapar_backend/docs" // Import docs yang akan dibuat nanti
 	"lapar_backend/routes"
+
+	"github.com/joho/godotenv"
 )
 
 // @title Lapar Backend API
@@ -32,6 +36,12 @@ func main() {
 	app := fiber.New()
 
 	app.Get("/swagger/*", swagger.HandlerDefault)
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",                   // Izinkan semua asal
+		AllowMethods: "GET,POST,PUT,DELETE", // Metode yang diizinkan
+		AllowHeaders: "*",                   // Izinkan semua header
+	}))
 
 	routes.SetupRoutes(app)
 
