@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import '../api/api_service.dart';
-import '../models/login_request.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lapar_fe/api/api_service.dart';
+import '../../models/login_request.dart';
+import '../pages/child_dashboard.dart';
+import '../pages/parent_dashboard.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,71 +15,72 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-
   bool isLoading = false;
-  String? errorMessage;
 
   void login() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
-    final api = ApiService(baseUrl: 'http://localhost:2020');
-    final request = LoginRequest(
-      email: emailController.text.trim(),
-      password: passwordController.text,
-    );
+    setState(() => isLoading = true);
 
     try {
-      await api.loginUser(request);
+      final api = ApiService(
+        baseUrl: 'http://localhost:2020',
+      ); // Ganti baseUrl jika perlu
+      final response = await api.loginUser(
+        LoginRequest(
+          email: emailController.text.trim(),
+          password: passwordController.text,
+        ),
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', response['token']);
+      await prefs.setString('role', response['role']);
+
+      if (response['role'] == 'Parent') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ParentDashboard()),
+        );
+      } else if (response['role'] == 'Child') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ChildDashboard()),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Unknown role')));
+      }
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Login berhasil!')));
-      // Navigasi ke halaman utama atau dashboard
-    } catch (e) {
-      setState(() {
-        errorMessage = e.toString();
-      });
+      ).showSnackBar(SnackBar(content: Text('Login gagal: ${e.toString()}')));
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
     }
-  }
-
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text("Login")),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(labelText: "Email"),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
+              decoration: const InputDecoration(labelText: "Password"),
               obscureText: true,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             isLoading
                 ? const CircularProgressIndicator()
-                : ElevatedButton(onPressed: login, child: const Text('Login')),
-            if (errorMessage != null) ...[
-              const SizedBox(height: 12),
-              Text(errorMessage!, style: const TextStyle(color: Colors.red)),
-            ],
+                : ElevatedButton(onPressed: login, child: const Text("Login")),
           ],
         ),
       ),

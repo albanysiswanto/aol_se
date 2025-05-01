@@ -25,7 +25,7 @@ class ApiService {
     return responseData['message'] ?? 'Registrasi berhasil';
   }
 
-  Future<void> loginUser(LoginRequest request) async {
+  Future<Map<String, dynamic>> loginUser(LoginRequest request) async {
     final url = Uri.parse('$baseUrl/auth/login');
 
     final response = await http.post(
@@ -37,9 +37,26 @@ class ApiService {
     if (response.statusCode != 200) {
       throw Exception('Gagal login: ${response.body}');
     }
-    // Jika kamu ingin menyimpan token:
-    // final data = json.decode(response.body);
-    // final token = data['token'];
-    // simpan token ke SharedPreferences kalau mau
+
+    final data = json.decode(response.body);
+    final token = data['token'];
+
+    // Decode JWT untuk mendapatkan role
+    final payload = _decodeJWT(token);
+    final role = payload['role'];
+
+    return {'token': token, 'role': role};
+  }
+
+  // Helper decode JWT
+  Map<String, dynamic> _decodeJWT(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception("Invalid JWT");
+    }
+
+    final payload = base64Url.normalize(parts[1]);
+    final decoded = utf8.decode(base64Url.decode(payload));
+    return json.decode(decoded);
   }
 }
