@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"lapar_backend/config"
+	"lapar_backend/utils"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"lapar_backend/config"
 )
 
 // InviteChildHandler godoc
@@ -51,7 +52,7 @@ func InviteChildHandler(c *fiber.Ctx) error {
 	inviteToken := uuid.New().String()
 
 	_, err = config.DB.NamedExec(`
-		INSERT INTO invitations (parent_id, child_email, invite_token, created_at) 
+		INSERT INTO invitations (parent_id, child_email, invite_token, created_at)
 		VALUES (:parent_id, :child_email, :invite_token, :created_at)`,
 		map[string]interface{}{
 			"parent_id":    parentID,
@@ -65,9 +66,17 @@ func InviteChildHandler(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create invitation"})
 	}
 
-	inviteLink := fmt.Sprintf("%s/auth/register-child?invite=%s", config.AppURL, inviteToken)
+	if req.ChildEmail == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Email is required"})
+	}
+
+	// inviteLink := fmt.Sprintf("%s/auth/register-child?invite=%s", config.AppURL, inviteToken)
 
 	// (TODO: Kirim email ke anak dengan inviteLink)
+	if err := utils.SendInvitationEmail(req.ChildEmail, inviteToken); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to send email"})
+	}
 
-	return c.JSON(fiber.Map{"message": "Invitation sent", "invite_link": inviteLink})
+	log.Printf("Generated invite token for %s: %s", req.ChildEmail, inviteToken)
+	return c.JSON(fiber.Map{"invite_token": inviteToken})
 }
