@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lapar_fe/api/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../pages/quiz_page.dart';
 
 class ChildDashboard extends StatefulWidget {
   const ChildDashboard({super.key});
@@ -72,7 +73,12 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                     _quizzes.map((quiz) {
                                       return GestureDetector(
                                         onTap: () {
-                                          // TODO: Navigate to quiz page
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => QuizApp(),
+                                            ),
+                                          );
                                         },
                                         child: Card(
                                           elevation: 2,
@@ -92,6 +98,13 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                                   style: const TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  "${quiz['description'] ?? 'Description not found'}",
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 8),

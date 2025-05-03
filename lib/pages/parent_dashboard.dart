@@ -98,7 +98,11 @@ class _ParentDashboardPageState extends State<ParentDashboard>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Parent Dashboard")),
+      appBar: AppBar(
+        title: const Text("Parent Dashboard"),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+      ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _children.length,

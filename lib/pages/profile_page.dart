@@ -20,22 +20,18 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/avatar_placeholder.png'), // Replace with your asset
+                    backgroundImage: AssetImage(
+                      'assets/avatar_placeholder.png',
+                    ), // Replace with your asset
                   ),
                   SizedBox(height: 16),
                   Text(
                     'John Doe',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     'johndoe@example.com',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -63,9 +59,46 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
             ),
+            ElevatedButton.icon(
+              onPressed: () => _showLogoutConfirmation(context),
+              icon: const Icon(Icons.logout),
+              label: const Text("Logout"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Logout"),
+            content: const Text("Apakah Anda yakin ingin logout?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Batal"),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Navigator.pop(context); // Tutup dialog
+                  // Navigator.pushReplacement(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => LoginPage()),
+                  // );
+                },
+                child: const Text("Logout"),
+              ),
+            ],
+          ),
     );
   }
 }

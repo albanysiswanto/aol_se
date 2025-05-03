@@ -161,4 +161,22 @@ class ApiService {
       throw Exception('Failed to fetch child quizzes');
     }
   }
+
+  Future<List<dynamic>> fetchQuizQuestions({
+    required String quizId,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/quiz/$quizId/questions');
+
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal mengambil soal kuis: ${response.body}');
+    }
+  }
 }

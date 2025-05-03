@@ -20,9 +20,13 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   bool isLoading = false;
   String? _userRole;
+  String? errorMessage;
   final _formKey = GlobalKey<FormState>();
   void login() async {
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
 
     try {
       final api = ApiService(
@@ -59,9 +63,9 @@ class _LoginPageState extends State<LoginPage> {
         ).showSnackBar(const SnackBar(content: Text('Unknown role')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login gagal: ${e.toString()}')));
+      setState(() {
+        errorMessage = 'Email atau password salah'; // Set pesan error
+      });
     } finally {
       setState(() => isLoading = false);
     }
@@ -154,6 +158,19 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 8),
+
+                // Tampilkan pesan error jika ada
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.deepPurple,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
