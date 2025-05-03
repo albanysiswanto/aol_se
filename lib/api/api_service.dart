@@ -101,7 +101,7 @@ class ApiService {
     }
 
     final data = json.decode(response.body);
-    return data['quiz_id']; // atau bisa juga return message jika ingin.
+    return data['quiz_id'];
   }
 
   Future<String> addQuestionToQuiz({
@@ -145,6 +145,20 @@ class ApiService {
       return List<Map<String, dynamic>>.from(jsonDecode(response.body));
     } else {
       throw Exception('Failed to fetch children: ${response.body}');
+    }
+  }
+
+  Future<List<dynamic>> fetchChildQuizzes(String token) async {
+    final url = Uri.parse('$baseUrl/api/quiz/child');
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch child quizzes');
     }
   }
 }
