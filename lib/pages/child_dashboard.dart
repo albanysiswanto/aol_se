@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lapar_fe/pages/quiz_page.dart';
 
 class ChildDashboard extends StatelessWidget {
   const ChildDashboard({super.key});
@@ -24,8 +25,11 @@ class ChildDashboard extends StatelessWidget {
                 children: List.generate(5, (index) {
                   return GestureDetector(
                     onTap: () {
-                      // Aksi ketika quiz diklik (opsional)
-                    },
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => QuizApp()),
+                    );
+                  },
                     child: Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(

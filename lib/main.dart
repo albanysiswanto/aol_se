@@ -26,7 +26,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: RegisterPage(), // Ganti halaman awal jadi RegisterPage
+      home: RegisterPage(),
+      // home: NavigationPage(userRole: 'Child'), // Ganti halaman awal jadi RegisterPage
     );
   }
 }

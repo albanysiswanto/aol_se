@@ -111,7 +111,7 @@ class HomePage extends StatelessWidget {
                 itemCount: subjects.length,
                 itemBuilder: (context, index) => GestureDetector(
                   onTap: () {
-                    // Tambahkan navigasi atau aksi di sini
+                     // Tambahkan navigasi atau aksi di sini
                   },
                   child: Card(
                     elevation: 2,
