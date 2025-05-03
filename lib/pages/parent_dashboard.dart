@@ -1,155 +1,171 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lapar_fe/pages/add_child.dart';
 import 'package:lapar_fe/pages/add_quiz.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../api/api_service.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
 
   @override
-  State<ParentDashboard> createState() => _ParentDashboardState();
+  State<ParentDashboard> createState() => _ParentDashboardPageState();
 }
 
-class _ParentDashboardState extends State<ParentDashboard>
+class _ParentDashboardPageState extends State<ParentDashboard>
     with SingleTickerProviderStateMixin {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-  int? _selectedChildIndex;
-
-  late AnimationController _controller;
+  late AnimationController _animationController;
   late Animation<double> _animation;
   bool _isOpen = false;
 
-  final List<String> adImages = [
-    'assets/images/ad1.png',
-    'https://via.placeholder.com/400x200?text=Ad+2',
-    'https://via.placeholder.com/400x200?text=Ad+3',
-  ];
-
-  final List<String> children = [
-    'Anak 1',
-    'Anak 2',
-    // 'Anak 3',
-  ];
+  List<Map<String, dynamic>> _children = [];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 250),
+    _animationController = AnimationController(
       vsync: this,
+      duration: const Duration(milliseconds: 250),
     );
-    _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
 
-    // Autoplay banner
-    Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_pageController.hasClients) {
-        _currentPage = (_currentPage + 1) % adImages.length;
-        _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOut,
-        );
+    _loadChildren();
+  }
+
+  Future<void> _loadChildren() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null) {
+        throw Exception("Token tidak ditemukan.");
       }
-    });
+
+      final children = await ApiService(
+        baseUrl: 'http://localhost:2020',
+      ).fetchChildren(token);
+
+      setState(() {
+        _children = children;
+      });
+    } catch (e) {
+      debugPrint("Error fetching children: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal memuat data anak: $e")));
+    }
   }
 
   void _toggleFAB() {
     setState(() {
       _isOpen = !_isOpen;
-      _isOpen ? _controller.forward() : _controller.reverse();
+      if (_isOpen) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
     });
+  }
+
+  Widget _buildOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: ScaleTransition(
+        scale: _animation,
+        child: FloatingActionButton.extended(
+          heroTag: label,
+          onPressed: onPressed,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.deepPurple,
+          icon: Icon(icon),
+          label: Text(label),
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _controller.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Child Dashboard"),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 200,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: adImages.length,
-              itemBuilder: (context, index) {
-                return AnimatedOpacity(
-                  duration: const Duration(milliseconds: 500),
-                  opacity: _currentPage == index ? 1.0 : 0.3,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      image: DecorationImage(
-                        image: NetworkImage(adImages[index]),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                );
-              },
+      appBar: AppBar(title: const Text("Parent Dashboard")),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _children.length,
+        itemBuilder: (context, index) {
+          final child = _children[index];
+          return Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Daftar Anak:",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ListTile(
+              leading: const CircleAvatar(child: Icon(Icons.person)),
+              title: Text(child['name'] ?? ''),
+              subtitle: Text("${child['birth_date'] ?? 'N/A'}"),
+              trailing: IconButton(
+                icon: const Icon(Icons.more_vert),
+                onPressed: () {
+                  // Tambahkan menu aksi jika diperlukan
+                },
               ),
             ),
-          ),
-          Expanded(
-            child: ListView.separated(
-              itemCount: children.length,
-              separatorBuilder: (context, index) => const Divider(),
-              itemBuilder: (context, index) {
-                final isSelected = _selectedChildIndex == index;
-
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      _selectedChildIndex = index;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.deepPurple.withOpacity(0.1) : null,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListTile(
-                      leading: Icon(Icons.person,
-                          color: isSelected ? Colors.deepPurple : Colors.grey),
-                      title: Text(
-                        children[index],
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.deepPurple : Colors.black,
-                        ),
-                      ),
-                      trailing: isSelected
-                          ? const Icon(Icons.check, color: Colors.deepPurple)
-                          : null,
-                    ),
-                  ),
-                );
-              },
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60.0, right: 16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (_isOpen)
+              _buildOption(
+                icon: Icons.person_add,
+                label: "Add Child",
+                onPressed: () {
+                  _toggleFAB();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddChildPage()),
+                  );
+                },
+              ),
+            if (_isOpen)
+              _buildOption(
+                icon: Icons.quiz,
+                label: "Add Quiz",
+                onPressed: () {
+                  _toggleFAB();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddQuizPage()),
+                  );
+                },
+              ),
+            FloatingActionButton(
+              onPressed: _toggleFAB,
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+              child: AnimatedIcon(
+                icon: AnimatedIcons.menu_close,
+                progress: _animation,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

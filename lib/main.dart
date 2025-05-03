@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:lapar_fe/pages/register.dart';
 import 'navigation/navigation_page.dart';
 // import 'package:lapar_fe/pages/register.dart';
 // import '/pages/register.dart';
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: NavigationPage(userRole: 'Parent',), // Ganti halaman awal jadi RegisterPage
+      home: RegisterPage(), // Ganti halaman awal jadi RegisterPage
     );
   }
 }

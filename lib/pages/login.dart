@@ -3,9 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lapar_fe/api/api_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/login_request.dart';
-import '../pages/child_dashboard.dart';
-import '../pages/parent_dashboard.dart';
+// import '../pages/child_dashboard.dart';
+// import '../pages/parent_dashboard.dart';
 import '../pages/register.dart';
+import '../navigation/navigation_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,12 +42,16 @@ class _LoginPageState extends State<LoginPage> {
       if (response['role'] == 'Parent') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const ParentDashboard()),
+          MaterialPageRoute(
+            builder: (_) => const NavigationPage(userRole: 'Parent'),
+          ),
         );
       } else if (response['role'] == 'Child') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const ChildDashboard()),
+          MaterialPageRoute(
+            builder: (_) => const NavigationPage(userRole: 'Child'),
+          ),
         );
       } else {
         ScaffoldMessenger.of(
@@ -62,36 +67,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Login")),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16),
-//         child: Column(
-//           children: [
-//             TextField(
-//               controller: emailController,
-//               decoration: const InputDecoration(labelText: "Email"),
-//             ),
-//             const SizedBox(height: 12),
-//             TextField(
-//               controller: passwordController,
-//               decoration: const InputDecoration(labelText: "Password"),
-//               obscureText: true,
-//             ),
-//             const SizedBox(height: 24),
-//             isLoading
-//                 ? const CircularProgressIndicator()
-//                 : ElevatedButton(onPressed: login, child: const Text("Login")),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
@@ -142,8 +118,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Email is required';
-                    if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) return 'Enter a valid email';
+                    if (value == null || value.isEmpty)
+                      return 'Email is required';
+                    if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value))
+                      return 'Enter a valid email';
                     return null;
                   },
                 ),
@@ -169,8 +147,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Password is required';
-                    if (value.length < 6) return 'Password must be at least 6 characters';
+                    if (value == null || value.isEmpty)
+                      return 'Password is required';
+                    if (value.length < 6)
+                      return 'Password must be at least 6 characters';
                     return null;
                   },
                 ),
@@ -186,16 +166,19 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            "Login",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
+                    child:
+                        isLoading
+                            ? const CircularProgressIndicator(
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                            )
+                            : Text(
+                              "Login",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -213,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 14,
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),

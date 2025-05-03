@@ -134,4 +134,17 @@ class ApiService {
     final data = json.decode(response.body);
     return data['question_id'];
   }
+
+  Future<List<Map<String, dynamic>>> fetchChildren(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/parent/children'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to fetch children: ${response.body}');
+    }
+  }
 }
