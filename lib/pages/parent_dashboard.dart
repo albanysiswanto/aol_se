@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:lapar_fe/pages/add_child.dart';
+import 'package:lapar_fe/pages/add_quiz.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -8,10 +10,15 @@ class ParentDashboard extends StatefulWidget {
   State<ParentDashboard> createState() => _ParentDashboardState();
 }
 
-class _ParentDashboardState extends State<ParentDashboard> {
+class _ParentDashboardState extends State<ParentDashboard>
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   int? _selectedChildIndex;
+
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _isOpen = false;
 
   final List<String> adImages = [
     'assets/images/ad1.png',
@@ -28,21 +35,36 @@ class _ParentDashboardState extends State<ParentDashboard> {
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 3), (Timer timer) {
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
+
+    // Autoplay banner
+    Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_pageController.hasClients) {
         _currentPage = (_currentPage + 1) % adImages.length;
         _pageController.animateToPage(
           _currentPage,
           duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
+          curve: Curves.easeOut,
         );
       }
+    });
+  }
+
+  void _toggleFAB() {
+    setState(() {
+      _isOpen = !_isOpen;
+      _isOpen ? _controller.forward() : _controller.reverse();
     });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 

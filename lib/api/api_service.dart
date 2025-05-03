@@ -59,4 +59,79 @@ class ApiService {
     final decoded = utf8.decode(base64Url.decode(payload));
     return json.decode(decoded);
   }
+
+  Future<String> inviteChild(String email, String token) async {
+    final url = Uri.parse('$baseUrl/api/invite');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'child_email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal mengundang anak: ${response.body}');
+    }
+
+    // final responseData = json.decode(response.body);
+    return 'Undangan berhasil dikirim. Silahkan cek email anak anda!';
+  }
+
+  Future<String> createQuiz({
+    required String token,
+    required String title,
+    required String description,
+  }) async {
+    final url = Uri.parse('$baseUrl/quiz/create');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'title': title, 'description': description}),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Gagal membuat quiz: ${response.body}');
+    }
+
+    final data = json.decode(response.body);
+    return data['quiz_id']; // atau bisa juga return message jika ingin.
+  }
+
+  Future<String> addQuestionToQuiz({
+    required String token,
+    required String quizId,
+    required String question,
+    required List<String> options,
+    required String correctAnswer,
+  }) async {
+    final url = Uri.parse('$baseUrl/quiz/add-question');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({
+        'quiz_id': quizId,
+        'question': question,
+        'options': options,
+        'correct_answer': correctAnswer,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Gagal menambahkan pertanyaan: ${response.body}');
+    }
+
+    final data = json.decode(response.body);
+    return data['question_id'];
+  }
 }
