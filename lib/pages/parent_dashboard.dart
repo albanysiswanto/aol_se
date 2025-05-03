@@ -80,8 +80,8 @@ class _ParentDashboardPageState extends State<ParentDashboard>
         child: FloatingActionButton.extended(
           heroTag: label,
           onPressed: onPressed,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.deepPurple,
+          // backgroundColor: Colors.white,
+          // foregroundColor: Colors.deepPurple,
           icon: Icon(icon),
           label: Text(label),
         ),
@@ -98,7 +98,11 @@ class _ParentDashboardPageState extends State<ParentDashboard>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Parent Dashboard")),
+      appBar: AppBar(
+        title: const Text("Parent Dashboard"),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+      ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _children.length,
