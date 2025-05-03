@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:lapar_fe/pages/login.dart';
 
 class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: const Text('Profile'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -18,12 +19,12 @@ class ProfilePage extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/avatar_placeholder.png'), // Replace with your asset
+                    backgroundImage: AssetImage('assets/avatar_placeholder.png'),
                   ),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     'John Doe',
                     style: TextStyle(
                       fontSize: 24,
@@ -40,11 +41,12 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
+
             // Profile Details Section
             Expanded(
               child: ListView(
-                children: [
+                children: const [
                   ProfileDetailCard(
                     icon: Icons.lock,
                     title: 'Password',
@@ -63,8 +65,46 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Logout Button
+            ElevatedButton.icon(
+              onPressed: () => _showLogoutConfirmation(context),
+              icon: const Icon(Icons.logout),
+              label: const Text("Logout"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Apakah Anda yakin ingin logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Tutup dialog
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
+            child: const Text("Logout"),
+          ),
+        ],
       ),
     );
   }
@@ -76,6 +116,7 @@ class ProfileDetailCard extends StatelessWidget {
   final String subtitle;
 
   const ProfileDetailCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -84,12 +125,12 @@ class ProfileDetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
         leading: Icon(icon, color: Colors.blueAccent),
         title: Text(
           title,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
           subtitle,
