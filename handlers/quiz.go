@@ -8,6 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
+	// "github.com/jackc/pgtype"
+
 	"lapar_backend/models"
 	"time"
 )
@@ -175,4 +177,47 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(quizzes)
+}
+
+func GetQuestionsByQuizID(c *fiber.Ctx) error {
+	quizID := c.Params("id")
+
+	rows, err := config.DB.Query(
+		`SELECT id, question, options, correct_answer FROM quiz_questions WHERE quiz_id = $1`, quizID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch questions",
+		})
+	}
+	defer rows.Close()
+
+	var questions []map[string]interface{}
+	for rows.Next() {
+		var id, question, correctAnswer string
+		var optionsRaw []byte
+
+		err := rows.Scan(&id, &question, &optionsRaw, &correctAnswer)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to scan question data",
+			})
+		}
+
+		var options []string
+		err = json.Unmarshal(optionsRaw, &options)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to parse options JSON",
+			})
+		}
+
+		questions = append(questions, fiber.Map{
+			"id":             id,
+			"question":       question,
+			"options":        options,
+			"correct_answer": correctAnswer,
+		})
+	}
+
+	return c.JSON(questions)
 }
