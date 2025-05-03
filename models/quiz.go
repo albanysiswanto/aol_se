@@ -3,11 +3,11 @@ package models
 import "time"
 
 type Quiz struct {
-	ID        string    `json:"id" db:"id"`
-	ParentID  string    `json:"parent_id" db:"parent_id"`
-	Title     string    `json:"title" db:"title"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"created_at"`
+	ParentName  string `json:"parent_name"`
 }
 
 type QuizQuestion struct {

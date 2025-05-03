@@ -3,11 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"lapar_backend/config"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
-	//"lapar_backend/models"
+	"lapar_backend/models"
 	"time"
 )
 
@@ -130,4 +131,48 @@ func AddQuestionToQuiz(c *fiber.Ctx) error {
 		"message":     "Question added successfully",
 		"question_id": questionID,
 	})
+}
+
+func GetQuizzesByChildParent(c *fiber.Ctx) error {
+	childID, ok := c.Locals("userID").(string)
+	if !ok || childID == "" {
+		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User ID tidak ditemukan di context",
+		})
+	}
+
+	var parentID string
+	err := config.DB.QueryRow(`
+		SELECT parent_id FROM profile WHERE id = $1 AND role = 'Child'
+	`, childID).Scan(&parentID)
+
+	if err != nil || parentID == "" {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "Child or parent not found",
+		})
+	}
+
+	rows, err := config.DB.Query(`
+		SELECT q.id, q.title, q.description, q.created_at, p.full_name
+		FROM quiz q
+		JOIN profile p ON q.parent_id = p.id
+		WHERE q.parent_id = $1
+	`, parentID)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch quizzes",
+		})
+	}
+	defer rows.Close()
+
+	var quizzes []models.Quiz
+	for rows.Next() {
+		var quiz models.Quiz
+		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Description, &quiz.CreatedAt, &quiz.ParentName); err != nil {
+			continue
+		}
+		quizzes = append(quizzes, quiz)
+	}
+
+	return c.JSON(quizzes)
 }
