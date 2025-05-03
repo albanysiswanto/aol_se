@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"lapar_backend/config"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"lapar_backend/config"
+
 	//"lapar_backend/models"
 	"time"
 )
@@ -32,7 +34,7 @@ type AddQuestionRequest struct {
 // @Failure 400 {object} models.QuizResponseInvalidInput "Invalid input"
 // @Failure 401 {object} models.QuizResponseUnauthorized "Unauthorized"
 // @Security BearerAuth
-// @Router /api/quizzes [post]
+// @Router /quiz/create [post]
 func CreateQuiz(c *fiber.Ctx) error {
 	// Ambil user_id dari token (disimpan di context ketika login berhasil)
 	parentID := c.Locals("userID")
@@ -89,7 +91,7 @@ func CreateQuiz(c *fiber.Ctx) error {
 // @Failure 400 {object} models.QuestionResponseInvalidInput "Invalid input"
 // @Failure 401 {object} models.QuestionResponseUnauthorized "Unauthorized"
 // @Security BearerAuth
-// @Router /api/quizzes/questions [post]
+// @Router /quiz/add-question [post]
 func AddQuestionToQuiz(c *fiber.Ctx) error {
 	var req AddQuestionRequest
 	if err := c.BodyParser(&req); err != nil {

@@ -17,10 +17,10 @@ func SendInvitationEmail(toEmail, inviteToken string) error {
         <div style="max-width: 600px; margin: auto; background-color: #fff; border-radius: 8px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             <h2 style="color: #2e7d32;">👋 Halo!</h2>
             <p style="font-size: 16px;">
-                Kamu diundang untuk bergabung dalam aplikasi <strong style="color: #ef6c00;">Lapar</strong>, platform parenting digital yang membantu orang tua dan anak dalam mengelola waktu dan teknologi.
+                Kamu diundang oleh orang tua mu untuk bergabung dalam aplikasi <strong style="color: #ef6c00;">Lapar</strong>, platform parenting digital yang membantu orang tua dan anak dalam mengelola waktu dan teknologi.
             </p>
             <p style="font-size: 16px;">
-                Untuk mendaftar, silakan klik atau gunakan link unik di bawah ini:
+                Untuk mendaftar, silakan masukan token invitation unik di bawah ini:
             </p>
             <div style="margin: 20px 0; padding: 15px; background-color: #f1f8e9; border-left: 4px solid #66bb6a; font-weight: bold; word-break: break-all;">
                 `+inviteToken+`

@@ -80,3 +80,33 @@ func InviteChildHandler(c *fiber.Ctx) error {
 	log.Printf("Generated invite token for %s: %s", req.ChildEmail, inviteToken)
 	return c.JSON(fiber.Map{"invite_token": inviteToken})
 }
+
+func GetChildrenByParent(c *fiber.Ctx) error {
+	parentID := c.Locals("userID").(string)
+	rows, err := config.DB.Query(`
+        SELECT id, full_name, birth_date
+        FROM profile
+        WHERE role = 'Child' AND parent_id = $1
+    `, parentID)
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to fetch children"})
+	}
+
+	var children []map[string]interface{}
+	for rows.Next() {
+		var id, name string
+		var birthDate time.Time
+		err = rows.Scan(&id, &name, &birthDate)
+		if err != nil {
+			continue
+		}
+		children = append(children, map[string]interface{}{
+			"id":         id,
+			"name":       name,
+			"birth_date": birthDate.Format("2006-01-02"),
+		})
+	}
+
+	return c.JSON(children)
+}

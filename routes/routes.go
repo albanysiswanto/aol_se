@@ -1,9 +1,10 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"lapar_backend/handlers"
 	"lapar_backend/middleware"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func SetupRoutes(app *fiber.App) {
@@ -15,6 +16,7 @@ func SetupRoutes(app *fiber.App) {
 	auth.Post("/register-child", handlers.RegisterChildHandler)
 
 	api.Post("/invite", handlers.InviteChildHandler)
+	api.Get("/parent/children", handlers.GetChildrenByParent)
 
 	quizGroup := app.Group("/quiz", middleware.JWTMiddleware())
 	quizGroup.Post("/create", handlers.CreateQuiz)
