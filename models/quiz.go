@@ -13,11 +13,11 @@ type Quiz struct {
 }
 
 type QuizQuestion struct {
-	ID       string `json:"id" db:"id"`
-	QuizID   string `json:"quiz_id" db:"quiz_id"`
-	Question string `json:"question" db:"question"`
-	Options  string `json:"options" db:"options"`
-	Answer   string `json:"answer" db:"answer"`
+	ID       string   `json:"id"`
+	QuizID   string   `json:"quiz_id"`
+	Question string   `json:"question"`
+	Options  []string `json:"options"`
+	Answer   string   `json:"answer"`
 }
 
 type QuizResult struct {

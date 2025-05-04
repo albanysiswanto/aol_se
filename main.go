@@ -36,6 +36,11 @@ func main() {
 
 	app := fiber.New()
 
+	app.Use(func(c *fiber.Ctx) error {
+		log.Printf("Request: %s %s", c.Method(), c.OriginalURL())
+		return c.Next()
+	})
+
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	app.Use(cors.New(cors.Config{

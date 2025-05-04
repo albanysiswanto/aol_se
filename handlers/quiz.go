@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"lapar_backend/config"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 
 	// "github.com/jackc/pgtype"
 
@@ -195,6 +197,59 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 	return c.JSON(quizzes)
 }
 
+// func GetQuizWithQuestions(c *fiber.Ctx) error {
+// 	quizID := c.Params("id")
+
+// 	// Ambil data quiz (timer, title, dll)
+// 	var quiz models.Quiz
+// 	err := config.DB.QueryRow(`
+// 		SELECT id, title, description, timer
+// 		FROM quiz
+// 		WHERE id = $1
+// 	`, quizID).Scan(&quiz.ID, &quiz.Title, &quiz.Description, &quiz.Timer)
+
+// 	if err != nil {
+// 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+// 			"error": "Quiz not found",
+// 		})
+// 	}
+
+// 	// Ambil data questions
+// 	rows, err := config.DB.Query(`
+// 		SELECT id, quiz_id, question, options, correct_answer
+// 		FROM quiz_questions
+// 		WHERE quiz_id = $1
+// 	`, quizID)
+// 	if err != nil {
+// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+// 			"error": "Failed to fetch questions",
+// 		})
+// 	}
+// 	defer rows.Close()
+
+// 	var questions []models.QuizQuestion
+// 	for rows.Next() {
+// 		var q models.QuizQuestion
+// 		var optionsJSON string
+
+// 		err := rows.Scan(&q.ID, &q.QuizID, &q.Question, &optionsJSON, &q.Answer)
+// 		if err != nil {
+// 			continue
+// 		}
+
+// 		json.Unmarshal([]byte(optionsJSON), &q.Options)
+// 		questions = append(questions, q)
+// 	}
+
+// 	return c.JSON(fiber.Map{
+// 		"id":          quiz.ID,
+// 		"title":       quiz.Title,
+// 		"description": quiz.Description,
+// 		"timer":       quiz.Timer,
+// 		"questions":   questions,
+// 	})
+// }
+
 func GetQuizWithQuestions(c *fiber.Ctx) error {
 	quizID := c.Params("id")
 
@@ -235,7 +290,20 @@ func GetQuizWithQuestions(c *fiber.Ctx) error {
 			continue
 		}
 
-		json.Unmarshal([]byte(optionsJSON), &q.Options)
+		// Pastikan optionsJSON bukan string kosong atau null
+		if optionsJSON != "" {
+			var options []string
+			// Decode JSON options ke []string
+			err := json.Unmarshal([]byte(optionsJSON), &options)
+			if err == nil {
+				// Assign ke q.Options setelah berhasil decode
+				q.Options = options
+			} else {
+				// Tangani error jika JSON tidak bisa didecode
+				continue
+			}
+		}
+
 		questions = append(questions, q)
 	}
 
@@ -290,4 +358,116 @@ func GetQuestionsByQuizID(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(questions)
+}
+
+func FetchQuizQuestionsWithAnswers(db *sqlx.DB, quizID string) ([]models.QuizQuestion, error) {
+	rows, err := db.DB.Query(`
+		SELECT id, quiz_id, question, options, correct_answer
+		FROM quiz_questions
+		WHERE quiz_id = $1
+	`, quizID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var questions []models.QuizQuestion
+	for rows.Next() {
+		var q models.QuizQuestion
+		var optionsJSON string
+
+		err := rows.Scan(&q.ID, &q.QuizID, &q.Question, &optionsJSON, &q.Answer)
+		if err != nil {
+			continue
+		}
+
+		if optionsJSON != "" {
+			var options []string
+			if err := json.Unmarshal([]byte(optionsJSON), &options); err == nil {
+				q.Options = options
+			}
+		}
+
+		questions = append(questions, q)
+	}
+
+	return questions, nil
+}
+
+type SubmitQuizPayload struct {
+	Answers map[string]int `json:"answers"`
+}
+
+func SubmitQuizResult(c *fiber.Ctx) error {
+	quizID := c.Params("id")
+	userID := c.Locals("userID").(string)
+	var payload SubmitQuizPayload
+
+	fmt.Println("Received payload:", payload)
+	fmt.Println("Parsed answers:", payload.Answers)
+
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request",
+		})
+	}
+
+	questions, err := FetchQuizQuestionsWithAnswers(config.DB, quizID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal mengambil soal"})
+	}
+
+	correct := 0
+	for _, q := range questions {
+		selected, ok := payload.Answers[q.ID]
+		if ok {
+			if selected >= 0 && selected < len(q.Options) && q.Options[selected] == q.Answer {
+				correct++
+			}
+		}
+	}
+
+	score := float64(correct) / float64(len(questions)) * 100
+
+	_, err = config.DB.Exec(`
+    INSERT INTO quiz_results (quiz_id, child_id, score, submitted_at)
+    VALUES ($1, $2, $3, NOW())
+  `, quizID, userID, score)
+
+	if err != nil {
+		fmt.Println("Error inserting quiz result:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to insert quiz result",
+		})
+	}
+
+	var rewardQuiz int
+	err = config.DB.QueryRow("SELECT reward FROM quiz WHERE id = $1", quizID).Scan(&rewardQuiz)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Gagal mengambil reward kuis",
+		})
+	}
+
+	minutesReward := rewardQuiz
+	_, err = config.DB.Exec(`
+    INSERT INTO user_rewards (child_id, total_time, updated_at)
+    VALUES ($1, $2, NOW())
+    ON CONFLICT (child_id) DO UPDATE
+    SET total_time = user_rewards.total_time + EXCLUDED.total_time,
+        updated_at = EXCLUDED.updated_at
+  `, userID, minutesReward)
+
+	if err != nil {
+		fmt.Println("Error updating rewards:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update rewards",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message":        "Quiz result submitted",
+		"score":          score,
+		"reward_minutes": minutesReward,
+	})
 }
