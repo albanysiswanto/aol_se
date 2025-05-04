@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: const Text('Profile'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -18,14 +21,14 @@ class ProfilePage extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 50,
                     backgroundImage: AssetImage(
                       'assets/avatar_placeholder.png',
-                    ), // Replace with your asset
+                    ),
                   ),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     'John Doe',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
@@ -36,11 +39,11 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             // Profile Details Section
             Expanded(
               child: ListView(
-                children: [
+                children: const [
                   ProfileDetailCard(
                     icon: Icons.lock,
                     title: 'Password',
@@ -78,27 +81,33 @@ class ProfilePage extends StatelessWidget {
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Logout"),
-            content: const Text("Apakah Anda yakin ingin logout?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Batal"),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Navigator.pop(context); // Tutup dialog
-                  // Navigator.pushReplacement(
-                  //   context,
-                  //   MaterialPageRoute(builder: (context) => LoginPage()),
-                  // );
-                },
-                child: const Text("Logout"),
-              ),
-            ],
-          ),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Logout"),
+          content: const Text("Apakah kamu yakin ingin logout?"),
+          actions: [
+            TextButton(
+              child: const Text("Batal"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text("Logout"),
+              onPressed: () async {
+                Navigator.of(context).pop(); // Tutup dialog
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear(); // Bersihkan semua cache
+                if (context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -109,6 +118,7 @@ class ProfileDetailCard extends StatelessWidget {
   final String subtitle;
 
   const ProfileDetailCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -117,17 +127,10 @@ class ProfileDetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blueAccent),
-        title: Text(
-          title,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-        ),
+        leading: Icon(icon, color: Colors.deepPurple),
+        title: Text(title),
+        subtitle: Text(subtitle),
       ),
     );
   }
