@@ -33,17 +33,10 @@ class _ChildDashboardState extends State<ChildDashboard> {
         baseUrl: "http://localhost:2020",
       ).fetchChildQuizzes(token);
 
-      if (quizzes != null && quizzes.isNotEmpty) {
-        setState(() {
-          _quizzes = quizzes;
-          _isLoading = false;
-        });
-      } else {
-        print("No quizzes available");
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _quizzes = quizzes ?? [];
+        _isLoading = false;
+      });
     } catch (e) {
       print("Error fetching quizzes: $e");
       setState(() {
@@ -55,6 +48,18 @@ class _ChildDashboardState extends State<ChildDashboard> {
   String _shorten(String text, int maxLength) {
     if (text.length <= maxLength) return text;
     return '${text.substring(0, maxLength)}...';
+  }
+
+  void _navigateToQuiz(String quizId) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => QuizPage(quizId: quizId)),
+    );
+
+    if (result == 'submitted') {
+      // Reload quizzes, yang dikerjakan akan otomatis tidak muncul
+      _loadQuizzes();
+    }
   }
 
   @override
@@ -76,7 +81,7 @@ class _ChildDashboardState extends State<ChildDashboard> {
                       child:
                           _quizzes.isEmpty
                               ? const Center(
-                                child: Text("No quizzes available."),
+                                child: Text("Tidak ada quiz tersedia."),
                               )
                               : GridView.count(
                                 crossAxisCount: 2,
@@ -91,16 +96,7 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                       final description =
                                           quiz['description'] ?? '';
                                       return GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      QuizPage(quizId: quizId),
-                                            ),
-                                          );
-                                        },
+                                        onTap: () => _navigateToQuiz(quizId),
                                         child: Card(
                                           elevation: 2,
                                           shape: RoundedRectangleBorder(

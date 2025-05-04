@@ -88,9 +88,10 @@ class _QuizPageState extends State<QuizPage> {
                     answers: selectedAnswers,
                     token: token,
                   );
-                  print(selectedAnswers); // Debugging print
 
+                  print("Selected answers: $selectedAnswers");
                   print("Response: $response");
+
                   if (response['error'] != null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Gagal mengirim jawaban")),
@@ -99,6 +100,9 @@ class _QuizPageState extends State<QuizPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Jawaban berhasil dikirim")),
                     );
+                    Navigator.of(
+                      context,
+                    ).pushReplacementNamed('/child_dashboard');
                   }
                 },
                 child: Text("Kirim"),
