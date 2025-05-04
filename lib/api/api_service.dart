@@ -184,7 +184,8 @@ class ApiService {
     print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      return data['questions'] ?? []; // ✅ hanya ambil bagian "questions"
     } else {
       throw Exception('Gagal mengambil soal kuis: ${response.body}');
     }
@@ -226,6 +227,60 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Gagal mengambil kuis: ${response.body}');
+    }
+  }
+
+  // Future<Map<String, dynamic>> submitQuizResult({
+  //   required String quizId,
+  //   required Map<String, int> answers,
+  // }) async {
+  //   final url = Uri.parse('$baseUrl/api/quiz/$quizId/submit');
+
+  //   // Siapkan data payload
+  //   final payload = {'answers': answers};
+
+  //   try {
+  //     final response = await http.post(
+  //       url,
+  //       body: json.encode(payload),
+  //       headers: {'Content-Type': 'application/json'},
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       return json.decode(response.body);
+  //     } else {
+  //       throw Exception('Gagal mengirim hasil kuis');
+  //     }
+  //   } catch (e) {
+  //     print("Error submitting quiz result: $e");
+  //     return {'error': 'Gagal mengirim hasil kuis'};
+  //   }
+  // }
+
+  Future<Map<String, dynamic>> submitQuizResult({
+    required String quizId,
+    required Map<String, int> answers,
+    required String token,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/quiz/$quizId/submit'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'answers': answers}),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body); // Return success response
+      } else {
+        print('Response code: ${response.statusCode}, body: ${response.body}');
+        return {'error': 'Failed to submit quiz result'};
+      }
+    } catch (e) {
+      print('Error submitting quiz result: $e');
+      return {'error': 'Error submitting quiz result'};
     }
   }
 }
