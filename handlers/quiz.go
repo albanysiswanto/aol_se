@@ -163,20 +163,22 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 
 	if err != nil || parentID == "" {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"error": "Child or parent not found",
+			"error": "Child atau parent tidak ditemukan",
 		})
 	}
 
-	// Query untuk mengambil data quiz
 	rows, err := config.DB.Query(`
         SELECT q.id, q.title, q.description, q.created_at, p.full_name, q.reward, q.timer
         FROM quiz q
         JOIN profile p ON q.parent_id = p.id
         WHERE q.parent_id = $1
-    `, parentID)
+        AND q.id NOT IN (
+            SELECT quiz_id FROM quiz_results WHERE child_id = $2
+        )
+    `, parentID, childID)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch quizzes",
+			"error": "Gagal mengambil data quiz",
 		})
 	}
 	defer rows.Close()
@@ -188,9 +190,7 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 			continue
 		}
 
-		// Mengonversi detik ke menit
-		quiz.Timer = quiz.Timer / 60
-
+		quiz.Timer = quiz.Timer / 60 // convert to minutes
 		quizzes = append(quizzes, quiz)
 	}
 
