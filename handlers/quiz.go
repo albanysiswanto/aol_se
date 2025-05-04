@@ -17,6 +17,8 @@ import (
 type CreateQuizRequest struct {
 	Title       string `json:"title" validate:"required"`
 	Description string `json:"description"`
+	Reward      int64  `json:"reward"`
+	Timer       int64  `json:"timer"`
 }
 
 type AddQuestionRequest struct {
@@ -39,7 +41,6 @@ type AddQuestionRequest struct {
 // @Security BearerAuth
 // @Router /quiz/create [post]
 func CreateQuiz(c *fiber.Ctx) error {
-	// Ambil user_id dari token (disimpan di context ketika login berhasil)
 	parentID := c.Locals("userID")
 	if parentID == nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -47,7 +48,6 @@ func CreateQuiz(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse input dari client
 	var req CreateQuizRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -55,22 +55,33 @@ func CreateQuiz(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validasi input
 	if req.Title == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Title is required",
 		})
 	}
 
-	// Generate UUID untuk quiz_id
-	quizID := uuid.New()
+	// Konversi menit ke detik
+	rewardSeconds := req.Reward * 60
+	timerSeconds := req.Timer * 60
 
-	// Simpan ke database
+	quizID := uuid.New()
+	createdAt := time.Now()
+
 	query := `
-		INSERT INTO quiz (id, parent_id, title, description, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO quiz (id, parent_id, title, description, reward, timer, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	_, err := config.DB.Exec(query, quizID, parentID, req.Title, req.Description, time.Now())
+	_, err := config.DB.Exec(
+		query,
+		quizID,
+		parentID,
+		req.Title,
+		req.Description,
+		rewardSeconds,
+		timerSeconds,
+		createdAt,
+	)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create quiz",
@@ -145,8 +156,8 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 
 	var parentID string
 	err := config.DB.QueryRow(`
-		SELECT parent_id FROM profile WHERE id = $1 AND role = 'Child'
-	`, childID).Scan(&parentID)
+        SELECT parent_id FROM profile WHERE id = $1 AND role = 'Child'
+    `, childID).Scan(&parentID)
 
 	if err != nil || parentID == "" {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
@@ -154,12 +165,13 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 		})
 	}
 
+	// Query untuk mengambil data quiz
 	rows, err := config.DB.Query(`
-		SELECT q.id, q.title, q.description, q.created_at, p.full_name
-		FROM quiz q
-		JOIN profile p ON q.parent_id = p.id
-		WHERE q.parent_id = $1
-	`, parentID)
+        SELECT q.id, q.title, q.description, q.created_at, p.full_name, q.reward, q.timer
+        FROM quiz q
+        JOIN profile p ON q.parent_id = p.id
+        WHERE q.parent_id = $1
+    `, parentID)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to fetch quizzes",
@@ -170,15 +182,73 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 	var quizzes []models.Quiz
 	for rows.Next() {
 		var quiz models.Quiz
-		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Description, &quiz.CreatedAt, &quiz.ParentName); err != nil {
+		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Description, &quiz.CreatedAt, &quiz.ParentName, &quiz.Reward, &quiz.Timer); err != nil {
 			continue
 		}
+
+		// Mengonversi detik ke menit
+		quiz.Timer = quiz.Timer / 60
+
 		quizzes = append(quizzes, quiz)
 	}
 
 	return c.JSON(quizzes)
 }
 
+func GetQuizWithQuestions(c *fiber.Ctx) error {
+	quizID := c.Params("id")
+
+	// Ambil data quiz (timer, title, dll)
+	var quiz models.Quiz
+	err := config.DB.QueryRow(`
+		SELECT id, title, description, timer
+		FROM quiz
+		WHERE id = $1
+	`, quizID).Scan(&quiz.ID, &quiz.Title, &quiz.Description, &quiz.Timer)
+
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Quiz not found",
+		})
+	}
+
+	// Ambil data questions
+	rows, err := config.DB.Query(`
+		SELECT id, quiz_id, question, options, correct_answer
+		FROM quiz_questions
+		WHERE quiz_id = $1
+	`, quizID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch questions",
+		})
+	}
+	defer rows.Close()
+
+	var questions []models.QuizQuestion
+	for rows.Next() {
+		var q models.QuizQuestion
+		var optionsJSON string
+
+		err := rows.Scan(&q.ID, &q.QuizID, &q.Question, &optionsJSON, &q.Answer)
+		if err != nil {
+			continue
+		}
+
+		json.Unmarshal([]byte(optionsJSON), &q.Options)
+		questions = append(questions, q)
+	}
+
+	return c.JSON(fiber.Map{
+		"id":          quiz.ID,
+		"title":       quiz.Title,
+		"description": quiz.Description,
+		"timer":       quiz.Timer,
+		"questions":   questions,
+	})
+}
+
+// GET Question yang lama
 func GetQuestionsByQuizID(c *fiber.Ctx) error {
 	quizID := c.Params("id")
 

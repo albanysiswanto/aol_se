@@ -8,6 +8,8 @@ type Quiz struct {
 	Description string `json:"description"`
 	CreatedAt   string `json:"created_at"`
 	ParentName  string `json:"parent_name"`
+	Reward      int    `json:"reward"`
+	Timer       int    `json:"timer"`
 }
 
 type QuizQuestion struct {
