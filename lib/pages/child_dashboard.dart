@@ -29,8 +29,9 @@ class _ChildDashboardState extends State<ChildDashboard> {
       }
 
       final quizzes = await ApiService(
-        baseUrl: "http://localhost:2020",
+        baseUrl: "http://localhost:2020", // Ganti dengan base URL yang sesuai
       ).fetchChildQuizzes(token);
+
       setState(() {
         _quizzes = quizzes;
         _isLoading = false;
@@ -76,7 +77,10 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => QuizApp(),
+                                              builder:
+                                                  (context) => QuizPage(
+                                                    quizId: quiz['id'],
+                                                  ),
                                             ),
                                           );
                                         },
@@ -102,7 +106,8 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                                 ),
                                                 const SizedBox(height: 8),
                                                 Text(
-                                                  "${quiz['description'] ?? 'Description not found'}",
+                                                  quiz['description'] ??
+                                                      'Description not found',
                                                   style: const TextStyle(
                                                     fontSize: 12,
                                                   ),

@@ -1,107 +1,128 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../api/api_service.dart';
 
-void main() => runApp(QuizApp());
+class QuizPage extends StatefulWidget {
+  final String quizId;
+  const QuizPage({Key? key, required this.quizId}) : super(key: key);
 
-class QuizApp extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Quiz App',
-      theme: ThemeData(primarySwatch: Colors.deepPurple),
-      home: QuizScreen(),
-      debugShowCheckedModeBanner: false,
-    );
+  State<QuizPage> createState() => _QuizPageState();
+}
+
+class _QuizPageState extends State<QuizPage> {
+  final apiService = ApiService(baseUrl: 'http://localhost:2020');
+  List<dynamic> questions = [];
+  int currentQuestionIndex = 0;
+  Map<String, int> selectedAnswers = {};
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadQuestions();
   }
-}
 
-class QuizScreen extends StatefulWidget {
-  @override
-  _QuizScreenState createState() => _QuizScreenState();
-}
+  Future<void> loadQuestions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-class _QuizScreenState extends State<QuizScreen> {
-  int currentQuestion = 1;
-  int totalQuestions = 15;
-  int selectedOption = -1;
+    if (token == null) {
+      print("Token tidak ditemukan");
+      return;
+    }
 
-  List<String> options = ['Surabaya', 'Bandung', 'Jakarta', 'Medan'];
+    try {
+      final apiService = ApiService(baseUrl: "http://localhost:2020");
+      final result = await apiService.fetchQuizQuestions(
+        quizId: widget.quizId,
+        token: token,
+      );
 
-  void _showSubmitDialog() {
+      setState(() {
+        questions = result;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error loading questions: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _submitQuiz() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Konfirmasi"),
-          content: Text("Apakah kamu yakin sudah selesai menjawab kuis ini?"),
-          actions: [
-            TextButton(
-              child: Text("Batal"),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            ElevatedButton(
-              child: Text("Ya, Selesai"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
+      builder:
+          (ctx) => AlertDialog(
+            title: Text("Kirim Jawaban"),
+            content: Text("Yakin ingin mengirim semua jawaban?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text("Batal"),
               ),
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Navigasi ke hasil kuis atau halaman berikutnya bisa ditambahkan di sini
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text("Jawaban dikirim!")));
-              },
-            ),
-          ],
-        );
-      },
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Jawaban berhasil dikirim")),
+                  );
+                  // TODO: Kirim ke endpoint hasil kuis jika sudah ada
+                },
+                child: Text("Kirim"),
+              ),
+            ],
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isLastQuestion = currentQuestion == totalQuestions;
+    if (isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Loading...")),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final currentQuestion = questions[currentQuestionIndex];
+    final options = List<String>.from(currentQuestion['options']);
+    final questionId = currentQuestion['id'];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Quiz App'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text("Quiz"), backgroundColor: Colors.deepPurple),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            /// Question Info & Timer
+            /// Question info
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Soal $currentQuestion/$totalQuestions",
-                  style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+                  "Soal ${currentQuestionIndex + 1}/${questions.length}",
+                  style: TextStyle(fontSize: 16),
                 ),
+                // Placeholder Timer
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 4.0,
-                    horizontal: 12.0,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.deepPurple,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(
-                    "00:30",
-                    style: TextStyle(color: Colors.white, fontSize: 14),
-                  ),
+                  child: Text("00:30", style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
             SizedBox(height: 20),
 
-            /// Question Text
+            /// Question text
             Text(
-              'Apa ibu kota Indonesia?',
+              currentQuestion['question'],
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
@@ -111,7 +132,7 @@ class _QuizScreenState extends State<QuizScreen> {
               return GestureDetector(
                 onTap: () {
                   setState(() {
-                    selectedOption = index;
+                    selectedAnswers[questionId] = index;
                   });
                 },
                 child: Container(
@@ -119,12 +140,12 @@ class _QuizScreenState extends State<QuizScreen> {
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color:
-                        selectedOption == index
+                        selectedAnswers[questionId] == index
                             ? Colors.deepPurple[100]
                             : Colors.white,
                     border: Border.all(
                       color:
-                          selectedOption == index
+                          selectedAnswers[questionId] == index
                               ? Colors.deepPurple
                               : Colors.grey,
                     ),
@@ -133,7 +154,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        selectedOption == index
+                        selectedAnswers[questionId] == index
                             ? Icons.radio_button_checked
                             : Icons.radio_button_off,
                         color: Colors.deepPurple,
@@ -154,16 +175,15 @@ class _QuizScreenState extends State<QuizScreen> {
               children: [
                 ElevatedButton.icon(
                   onPressed:
-                      currentQuestion > 1
+                      currentQuestionIndex > 0
                           ? () {
                             setState(() {
-                              currentQuestion--;
-                              selectedOption = -1;
+                              currentQuestionIndex--;
                             });
                           }
                           : null,
                   icon: Icon(Icons.arrow_back),
-                  label: Text("Previous"),
+                  label: Text("Sebelumnya"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,
@@ -171,19 +191,24 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    if (isLastQuestion) {
-                      _showSubmitDialog();
+                    if (currentQuestionIndex == questions.length - 1) {
+                      _submitQuiz();
                     } else {
                       setState(() {
-                        currentQuestion++;
-                        selectedOption = -1;
+                        currentQuestionIndex++;
                       });
                     }
                   },
                   icon: Icon(
-                    isLastQuestion ? Icons.check : Icons.arrow_forward,
+                    currentQuestionIndex == questions.length - 1
+                        ? Icons.check
+                        : Icons.arrow_forward,
                   ),
-                  label: Text(isLastQuestion ? "Submit" : "Next"),
+                  label: Text(
+                    currentQuestionIndex == questions.length - 1
+                        ? "Selesai"
+                        : "Selanjutnya",
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     foregroundColor: Colors.white,

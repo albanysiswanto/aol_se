@@ -166,12 +166,15 @@ class ApiService {
     required String quizId,
     required String token,
   }) async {
-    final url = Uri.parse('$baseUrl/quiz/$quizId/questions');
+    final url = Uri.parse('$baseUrl/api/quiz/$quizId/questions');
 
     final response = await http.get(
       url,
       headers: {'Authorization': 'Bearer $token'},
     );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
