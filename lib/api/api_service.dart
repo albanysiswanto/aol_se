@@ -273,7 +273,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body); // Return success response
+        return json.decode(response.body);
       } else {
         print('Response code: ${response.statusCode}, body: ${response.body}');
         return {'error': 'Failed to submit quiz result'};
@@ -281,6 +281,28 @@ class ApiService {
     } catch (e) {
       print('Error submitting quiz result: $e');
       return {'error': 'Error submitting quiz result'};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchUserProfile(
+    String token,
+    String role,
+  ) async {
+    final endpoint =
+        role == 'Child' ? '/api/profile/child' : '/api/profile/parent';
+
+    final response = await http.get(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal mengambil data profil: ${response.body}');
     }
   }
 }
