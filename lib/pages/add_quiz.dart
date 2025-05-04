@@ -13,6 +13,8 @@ class AddQuizPage extends StatefulWidget {
 class _AddQuizPageState extends State<AddQuizPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _rewardController = TextEditingController();
+  final TextEditingController _timerController = TextEditingController();
 
   Future<void> _submitQuiz() async {
     final prefs = await SharedPreferences.getInstance();
@@ -24,6 +26,15 @@ class _AddQuizPageState extends State<AddQuizPage> {
       return;
     }
 
+    if (_titleController.text.isEmpty ||
+        _rewardController.text.isEmpty ||
+        _timerController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Semua field wajib diisi")));
+      return;
+    }
+
     try {
       final quizId = await ApiService(
         baseUrl: 'http://localhost:2020',
@@ -31,6 +42,8 @@ class _AddQuizPageState extends State<AddQuizPage> {
         token: token,
         title: _titleController.text,
         description: _descriptionController.text,
+        reward: int.parse(_rewardController.text),
+        timer: int.parse(_timerController.text),
       );
 
       ScaffoldMessenger.of(
@@ -63,6 +76,22 @@ class _AddQuizPageState extends State<AddQuizPage> {
             TextField(
               controller: _descriptionController,
               decoration: const InputDecoration(labelText: 'Deskripsi'),
+            ),
+            TextField(
+              controller: _rewardController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Reward (menit)',
+                hintText: 'Contoh: 5',
+              ),
+            ),
+            TextField(
+              controller: _timerController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Timer (menit)',
+                hintText: 'Contoh: 10',
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

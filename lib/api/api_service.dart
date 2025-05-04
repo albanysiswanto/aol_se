@@ -84,6 +84,8 @@ class ApiService {
     required String token,
     required String title,
     required String description,
+    required int reward,
+    required int timer,
   }) async {
     final url = Uri.parse('$baseUrl/quiz/create');
 
@@ -93,7 +95,12 @@ class ApiService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: json.encode({'title': title, 'description': description}),
+      body: json.encode({
+        'title': title,
+        'description': description,
+        'reward': reward,
+        'timer': timer,
+      }),
     );
 
     if (response.statusCode != 201) {
@@ -180,6 +187,45 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Gagal mengambil soal kuis: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchQuizInfo({
+    required String quizId,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/quiz/$quizId/questions');
+
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    print('Quiz Info Response status: ${response.statusCode}');
+    print('Quiz Info Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal mengambil info kuis: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchQuizDetailAndQuestions({
+    required String quizId,
+    required String token,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/quiz/$quizId/questions');
+
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal mengambil kuis: ${response.body}');
     }
   }
 }

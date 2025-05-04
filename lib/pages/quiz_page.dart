@@ -1,8 +1,9 @@
-import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
+import '../pages/child_dashboard.dart';
+import 'dart:convert';
 
 class QuizPage extends StatefulWidget {
   final String quizId;
@@ -14,18 +15,28 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   final apiService = ApiService(baseUrl: 'http://localhost:2020');
+
   List<dynamic> questions = [];
   int currentQuestionIndex = 0;
   Map<String, int> selectedAnswers = {};
   bool isLoading = true;
 
+  int timerInSeconds = 0;
+  Timer? _countdownTimer;
+
   @override
   void initState() {
     super.initState();
-    loadQuestions();
+    loadQuestionsAndTimer();
   }
 
-  Future<void> loadQuestions() async {
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> loadQuestionsAndTimer() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -35,22 +46,58 @@ class _QuizPageState extends State<QuizPage> {
     }
 
     try {
-      final apiService = ApiService(baseUrl: "http://localhost:2020");
-      final result = await apiService.fetchQuizQuestions(
+      final result = await apiService.fetchQuizDetailAndQuestions(
         quizId: widget.quizId,
         token: token,
       );
 
-      setState(() {
-        questions = result;
-        isLoading = false;
-      });
+      // Check if the response has questions and timer before proceeding
+      if (result != null &&
+          result['questions'] != null &&
+          result['timer'] != null) {
+        setState(() {
+          questions = result['questions'];
+          timerInSeconds = result['timer'] ?? 60;
+          isLoading = false;
+        });
+
+        startTimer();
+      } else {
+        print("Invalid quiz data");
+        setState(() {
+          isLoading = false;
+        });
+      }
     } catch (e) {
       print("Error loading questions: $e");
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  void startTimer() {
+    _countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (timerInSeconds == 0) {
+        timer.cancel();
+        _autoSubmit();
+      } else {
+        setState(() {
+          timerInSeconds--;
+        });
+      }
+    });
+  }
+
+  void _autoSubmit() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Waktu habis! Jawaban dikirim otomatis.")),
+    );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => ChildDashboard()),
+    );
   }
 
   void _submitQuiz() {
@@ -68,16 +115,28 @@ class _QuizPageState extends State<QuizPage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
+                  _countdownTimer?.cancel();
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Jawaban berhasil dikirim")),
                   );
-                  // TODO: Kirim ke endpoint hasil kuis jika sudah ada
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => ChildDashboard()),
+                  );
                 },
                 child: Text("Kirim"),
               ),
             ],
           ),
     );
+  }
+
+  String formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return "${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -89,8 +148,20 @@ class _QuizPageState extends State<QuizPage> {
       );
     }
 
+    if (questions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Quiz")),
+        body: Center(child: Text("Soal tidak tersedia")),
+      );
+    }
+
     final currentQuestion = questions[currentQuestionIndex];
-    final options = List<String>.from(currentQuestion['options']);
+    final rawOptions = currentQuestion['options'];
+    final options =
+        rawOptions is String
+            ? List<String>.from(jsonDecode(rawOptions))
+            : List<String>.from(rawOptions);
+
     final questionId = currentQuestion['id'];
 
     return Scaffold(
@@ -107,14 +178,16 @@ class _QuizPageState extends State<QuizPage> {
                   "Soal ${currentQuestionIndex + 1}/${questions.length}",
                   style: TextStyle(fontSize: 16),
                 ),
-                // Placeholder Timer
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.deepPurple,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text("00:30", style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    formatTime(timerInSeconds),
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),

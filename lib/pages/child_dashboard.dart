@@ -13,6 +13,7 @@ class ChildDashboard extends StatefulWidget {
 class _ChildDashboardState extends State<ChildDashboard> {
   List<dynamic> _quizzes = [];
   bool _isLoading = true;
+  final Map<String, bool> _isExpanded = {};
 
   @override
   void initState() {
@@ -29,19 +30,31 @@ class _ChildDashboardState extends State<ChildDashboard> {
       }
 
       final quizzes = await ApiService(
-        baseUrl: "http://localhost:2020", // Ganti dengan base URL yang sesuai
+        baseUrl: "http://localhost:2020",
       ).fetchChildQuizzes(token);
 
-      setState(() {
-        _quizzes = quizzes;
-        _isLoading = false;
-      });
+      if (quizzes != null && quizzes.isNotEmpty) {
+        setState(() {
+          _quizzes = quizzes;
+          _isLoading = false;
+        });
+      } else {
+        print("No quizzes available");
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print("Error fetching quizzes: $e");
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  String _shorten(String text, int maxLength) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength)}...';
   }
 
   @override
@@ -72,15 +85,19 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                 childAspectRatio: 3 / 2,
                                 children:
                                     _quizzes.map((quiz) {
+                                      final quizId = quiz['id'];
+                                      final isExpanded =
+                                          _isExpanded[quizId] ?? false;
+                                      final description =
+                                          quiz['description'] ?? '';
                                       return GestureDetector(
                                         onTap: () {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder:
-                                                  (context) => QuizPage(
-                                                    quizId: quiz['id'],
-                                                  ),
+                                                  (context) =>
+                                                      QuizPage(quizId: quizId),
                                             ),
                                           );
                                         },
@@ -92,7 +109,7 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                             ),
                                           ),
                                           child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
+                                            padding: const EdgeInsets.all(12.0),
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
@@ -103,20 +120,92 @@ class _ChildDashboardState extends State<ChildDashboard> {
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.w600,
                                                   ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  quiz['description'] ??
-                                                      'Description not found',
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  "By ${quiz['parent_name'] ?? 'Unknown'}",
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
+                                                const SizedBox(height: 6),
+                                                Expanded(
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          isExpanded
+                                                              ? description
+                                                              : _shorten(
+                                                                description,
+                                                                60,
+                                                              ),
+                                                          style: const TextStyle(
+                                                            fontSize: 12,
+                                                            color:
+                                                                Colors.black87,
+                                                          ),
+                                                        ),
+                                                        if (description.length >
+                                                            60)
+                                                          GestureDetector(
+                                                            onTap: () {
+                                                              setState(() {
+                                                                _isExpanded[quizId] =
+                                                                    !isExpanded;
+                                                              });
+                                                            },
+                                                            child: Text(
+                                                              isExpanded
+                                                                  ? 'Sembunyikan'
+                                                                  : 'Selengkapnya',
+                                                              style:
+                                                                  const TextStyle(
+                                                                    fontSize:
+                                                                        12,
+                                                                    color:
+                                                                        Colors
+                                                                            .blue,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                        const SizedBox(
+                                                          height: 6,
+                                                        ),
+                                                        Text(
+                                                          "Reward: ${quiz['reward'] ?? '-'} poin",
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    Colors
+                                                                        .green,
+                                                              ),
+                                                        ),
+                                                        Text(
+                                                          "Timer: ${quiz['timer'] ?? '-'} menit",
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 12,
+                                                                color:
+                                                                    Colors
+                                                                        .orange,
+                                                              ),
+                                                        ),
+                                                        Text(
+                                                          "By ${quiz['parent_name'] ?? 'Unknown'}",
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 11,
+                                                                fontStyle:
+                                                                    FontStyle
+                                                                        .italic,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
                                               ],
