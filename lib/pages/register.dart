@@ -3,6 +3,7 @@ import '../api/api_service.dart';
 import '../models/register_request.dart';
 import 'package:lapar_fe/pages/login.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../widgets/widget_popup.dart';
 
 class RegisterPage extends StatefulWidget {
   RegisterPage({super.key});
@@ -48,8 +49,9 @@ class _RegisterPageState extends State<RegisterPage> {
       // Arahkan ke halaman lain jika perlu
     } catch (e) {
       setState(() {
-        errorMessage = e.toString();
+        errorMessage = "Email sudah terdaftar atau password tidak boleh kosong";
       });
+      showErrorPopup(context, errorMessage!);
     } finally {
       setState(() {
         isLoading = false;
@@ -131,14 +133,15 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F6),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
           child: Column(
             children: [
               const SizedBox(height: 32),
-              const FlutterLogo(size: 80),
+              // const FlutterLogo(size: 80),
+              Image.asset('assets/lapar.png', width: 120, height: 120),
               const SizedBox(height: 16),
               Text(
                 "Create Account",
@@ -170,7 +173,12 @@ class _RegisterPageState extends State<RegisterPage> {
               _buildLabel("Invite Token (optional)"),
               _buildTextField(inviteTokenController, "Enter your invite token (optional)"),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              if (errorMessage != null) ...[
+                const SizedBox(height: 12),
+                Text(errorMessage!, style: const TextStyle(color: Colors.red)),
+              ],
+              const SizedBox(height: 16),
               isLoading
                   ? const CircularProgressIndicator()
                   : SizedBox(
@@ -204,10 +212,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   style: GoogleFonts.poppins(color: Colors.black87, fontSize: 14),
                 ),
               ),
-              if (errorMessage != null) ...[
-                const SizedBox(height: 12),
-                Text(errorMessage!, style: const TextStyle(color: Colors.red)),
-              ],
+              // if (errorMessage != null) ...[
+              //   const SizedBox(height: 12),
+              //   Text(errorMessage!, style: const TextStyle(color: Colors.red)),
+              // ],
             ],
           ),
         ),

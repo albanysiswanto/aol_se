@@ -3,6 +3,9 @@ import 'package:lapar_fe/pages/add_child.dart';
 import 'package:lapar_fe/pages/add_quiz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_service.dart';
+import '../widgets/widget_popup.dart';
+import '../widgets/widget_photo.dart';
+
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -102,31 +105,45 @@ class _ParentDashboardPageState extends State<ParentDashboard>
         title: const Text("Parent Dashboard"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _children.length,
-        itemBuilder: (context, index) {
-          final child = _children[index];
-          return Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0),
+              child: const BannerSlider(),
             ),
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(child['name'] ?? ''),
-              subtitle: Text("${child['birth_date'] ?? 'N/A'}"),
-              trailing: IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () {
-                  // Tambahkan menu aksi jika diperlukan
-                },
-              ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _children.length,
+              itemBuilder: (context, index) {
+                final child = _children[index];
+                return Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person)),
+                    title: Text(child['name'] ?? ''),
+                    subtitle: Text("${child['birth_date'] ?? 'N/A'}"),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: () {
+                        // Tambahkan menu aksi jika diperlukan
+                      },
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(

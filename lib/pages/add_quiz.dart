@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lapar_fe/api/api_service.dart';
 import 'package:lapar_fe/pages/add_quest.dart';
+import '../widgets/widget_popup.dart';
 
 class AddQuizPage extends StatefulWidget {
   const AddQuizPage({super.key});
@@ -20,18 +21,14 @@ class _AddQuizPageState extends State<AddQuizPage> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     if (token == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Token tidak ditemukan")));
+      showErrorPopup(context, "Token tidak ditemukan");
       return;
     }
 
     if (_titleController.text.isEmpty ||
         _rewardController.text.isEmpty ||
         _timerController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Semua field wajib diisi")));
+      showErrorPopup(context, "Semua field harus diisi");
       return;
     }
 
@@ -55,50 +52,140 @@ class _AddQuizPageState extends State<AddQuizPage> {
         MaterialPageRoute(builder: (_) => AddQuestionPage(quizId: quizId)),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal: $e")));
+      showErrorPopup(context, "Gagal membuat quiz: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Tambah Quiz")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Judul'),
-            ),
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Deskripsi'),
-            ),
-            TextField(
-              controller: _rewardController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Reward (menit)',
-                hintText: 'Contoh: 5',
+      backgroundColor: Colors.deepPurple[50],
+      appBar: AppBar(
+        title: const Text(
+          "Tambah Quiz",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _titleController,
+                        decoration: InputDecoration(
+                          labelText: 'Judul',
+                          labelStyle: TextStyle(color: Colors.deepPurple[700]),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[200]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[400]!),
+                          ),
+                          prefixIcon: Icon(Icons.title, color: Colors.deepPurple[400]),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _descriptionController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: 'Deskripsi',
+                          labelStyle: TextStyle(color: Colors.deepPurple[700]),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[200]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[400]!),
+                          ),
+                          prefixIcon: Icon(Icons.description, color: Colors.deepPurple[400]),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _rewardController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Reward (menit)',
+                          hintText: 'Contoh: 5',
+                          labelStyle: TextStyle(color: Colors.deepPurple[700]),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[200]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[400]!),
+                          ),
+                          prefixIcon: Icon(Icons.emoji_events, color: Colors.deepPurple[400]),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: _timerController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Timer (menit)',
+                          hintText: 'Contoh: 10',
+                          labelStyle: TextStyle(color: Colors.deepPurple[700]),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[200]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.deepPurple[400]!),
+                          ),
+                          prefixIcon: Icon(Icons.timer, color: Colors.deepPurple[400]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            TextField(
-              controller: _timerController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Timer (menit)',
-                hintText: 'Contoh: 10',
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: _submitQuiz,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 4,
+                ),
+                child: const Text(
+                  "Buat Quiz",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submitQuiz,
-              child: const Text("Buat Quiz"),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

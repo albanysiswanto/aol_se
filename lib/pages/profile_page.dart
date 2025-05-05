@@ -9,6 +9,7 @@ class ProfilePage extends StatelessWidget {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -21,7 +22,7 @@ class ProfilePage extends StatelessWidget {
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: AssetImage(
-                      'assets/avatar_placeholder.png',
+                      'assets/image/hatta.png',
                     ), // Replace with your asset
                   ),
                   SizedBox(height: 16),
@@ -119,7 +120,7 @@ class ProfileDetailCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blueAccent),
+        leading: Icon(icon, color: Colors.deepPurple),
         title: Text(
           title,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

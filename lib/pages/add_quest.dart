@@ -17,16 +17,15 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
     4,
     (_) => TextEditingController(),
   );
-  final TextEditingController _correctAnswerController =
-      TextEditingController();
+  final TextEditingController _correctAnswerController = TextEditingController();
 
   Future<void> _submitQuestion() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     if (token == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Token tidak ditemukan")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Token tidak ditemukan")),
+      );
       return;
     }
 
@@ -49,42 +48,140 @@ class _AddQuestionPageState extends State<AddQuestionPage> {
         c.clear();
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal: $e")),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Tambah Pertanyaan")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: _questionController,
-                decoration: const InputDecoration(labelText: 'Pertanyaan'),
-              ),
-              ...List.generate(
-                4,
-                (index) => TextField(
-                  controller: _optionControllers[index],
-                  decoration: InputDecoration(labelText: 'Opsi ${index + 1}'),
-                ),
-              ),
-              TextField(
-                controller: _correctAnswerController,
-                decoration: const InputDecoration(labelText: 'Jawaban Benar'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _submitQuestion,
-                child: const Text("Tambah Pertanyaan"),
-              ),
+      backgroundColor: Colors.deepPurple[50],
+      appBar: AppBar(
+        title: const Text(
+          "Tambah Pertanyaan",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.deepPurple[50]!,
+              Colors.deepPurple[100]!,
             ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _questionController,
+                          decoration: InputDecoration(
+                            labelText: 'Pertanyaan',
+                            labelStyle: TextStyle(color: Colors.deepPurple[700]),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.deepPurple[300]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.deepPurple[700]!),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          maxLines: 3,
+                        ),
+                        const SizedBox(height: 20),
+                        ...List.generate(
+                          4,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 15),
+                            child: TextField(
+                              controller: _optionControllers[index],
+                              decoration: InputDecoration(
+                                labelText: 'Opsi ${index + 1}',
+                                labelStyle: TextStyle(color: Colors.deepPurple[700]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: Colors.deepPurple[300]!),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: Colors.deepPurple[700]!),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: _correctAnswerController,
+                          decoration: InputDecoration(
+                            labelText: 'Jawaban Benar',
+                            labelStyle: TextStyle(color: Colors.deepPurple[700]),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.deepPurple[300]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide(color: Colors.deepPurple[700]!),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 25),
+                ElevatedButton(
+                  onPressed: _submitQuestion,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: const Text(
+                    "Tambah Pertanyaan",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
