@@ -34,12 +34,13 @@ class _ChildDashboardState extends State<ChildDashboard> {
       ).fetchChildQuizzes(token);
 
       setState(() {
-        _quizzes = quizzes ?? [];
+        _quizzes = quizzes ?? []; // Pastikan quizzes tidak null
         _isLoading = false;
       });
     } catch (e) {
       print("Error fetching quizzes: $e");
       setState(() {
+        _quizzes = []; // Jika ada error, set _quizzes ke list kosong
         _isLoading = false;
       });
     }

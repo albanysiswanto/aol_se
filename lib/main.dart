@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:lapar_fe/pages/child_dashboard.dart';
 import 'package:lapar_fe/pages/register.dart';
 import 'navigation/navigation_page.dart';
 // import 'package:lapar_fe/pages/register.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => RegisterPage(),
         '/login': (context) => LoginPage(),
+        '/child_dashboard': (context) => ChildDashboard(),
       },
     );
   }

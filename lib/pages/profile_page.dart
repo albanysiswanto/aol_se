@@ -29,13 +29,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
     final apiService = ApiService(baseUrl: 'http://localhost:2020');
 
-    // Mendapatkan role dari token atau SharedPreferences
-    final role =
-        prefs.getString('role') ?? 'Parent'; // Menentukan default ke 'Parent'
+    final role = prefs.getString('role') ?? 'Parent';
 
     try {
       final profile = await apiService.fetchUserProfile(token, role);
-      print('Profile data: $profile'); // Debug di sini
+      print('Profile data: $profile');
 
       setState(() {
         _isLoading = false;

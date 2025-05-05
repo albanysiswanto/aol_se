@@ -100,9 +100,10 @@ class _QuizPageState extends State<QuizPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Jawaban berhasil dikirim")),
                     );
-                    Navigator.of(
-                      context,
-                    ).pushReplacementNamed('/child_dashboard');
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/child_dashboard',
+                      (Route<dynamic> route) => false,
+                    );
                   }
                 },
                 child: Text("Kirim"),

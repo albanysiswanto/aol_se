@@ -41,7 +41,6 @@ class ApiService {
     final data = json.decode(response.body);
     final token = data['token'];
 
-    // Decode JWT untuk mendapatkan role
     final payload = _decodeJWT(token);
     final role = payload['role'];
 
@@ -163,7 +162,14 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      // Cek apakah respons berisi data yang valid
+      final body = jsonDecode(response.body);
+      if (body is List) {
+        return body;
+      } else {
+        // Jika tidak dalam format List, kembalikan daftar kosong
+        return [];
+      }
     } else {
       throw Exception('Failed to fetch child quizzes');
     }
@@ -185,7 +191,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['questions'] ?? []; // ✅ hanya ambil bagian "questions"
+      return data['questions'] ?? [];
     } else {
       throw Exception('Gagal mengambil soal kuis: ${response.body}');
     }
@@ -303,6 +309,22 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Gagal mengambil data profil: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getProgress(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/progress'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      return {"error": "Failed to fetch progress"};
     }
   }
 }
