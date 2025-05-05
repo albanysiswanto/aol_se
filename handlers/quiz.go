@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"lapar_backend/config"
+	"math"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -427,7 +428,7 @@ func SubmitQuizResult(c *fiber.Ctx) error {
 		}
 	}
 
-	score := float64(correct) / float64(len(questions)) * 100
+	score := int(math.Round(float64(correct) / float64(len(questions)) * 100))
 
 	_, err = config.DB.Exec(`
     INSERT INTO quiz_results (quiz_id, child_id, score, submitted_at)

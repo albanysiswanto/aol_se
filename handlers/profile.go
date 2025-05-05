@@ -115,3 +115,37 @@ func GetParentProfile(c *fiber.Ctx) error {
 		"children":  children,
 	})
 }
+
+func GetChildProgress(c *fiber.Ctx) error {
+	userID := c.Locals("userID").(string)
+
+	var role string
+	err := config.DB.QueryRow("SELECT role FROM profile WHERE id = $1", userID).Scan(&role)
+	if err != nil || role != "Child" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	var total int
+	err = config.DB.QueryRow("SELECT COUNT(*) FROM quiz").Scan(&total)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get total quiz"})
+	}
+
+	var done int
+	err = config.DB.QueryRow("SELECT COUNT(*) FROM quiz_results WHERE child_id = $1", userID).Scan(&done)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get done quiz"})
+	}
+
+	percent := 0
+	if total > 0 {
+		percent = int(float64(done) / float64(total) * 100)
+	}
+
+	return c.JSON(fiber.Map{
+		"total_quiz": total,
+		"done_quiz":  done,
+		"remaining":  total - done,
+		"percentage": percent,
+	})
+}
