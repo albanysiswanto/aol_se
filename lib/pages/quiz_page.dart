@@ -122,6 +122,12 @@ class _QuizPageState extends State<QuizPage> {
       );
     }
 
+    if (questions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Quiz")),
+        body: Center(child: Text("Tidak ada soal tersedia")),
+      );
+    }
     final currentQuestion = questions[currentQuestionIndex];
     final rawOptions = currentQuestion['options'];
     final options =

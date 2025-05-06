@@ -55,6 +55,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -69,7 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           const CircleAvatar(
                             radius: 50,
                             backgroundImage: AssetImage(
-                              'assets/avatar_placeholder.png',
+                              'assets/image/hatta.png',
                             ),
                           ),
                           const SizedBox(height: 16),

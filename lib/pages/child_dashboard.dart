@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lapar_fe/api/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../pages/quiz_page.dart';
+import '../widgets/widget_photo.dart';
 
 class ChildDashboard extends StatefulWidget {
   const ChildDashboard({super.key});
@@ -70,12 +71,20 @@ class _ChildDashboardState extends State<ChildDashboard> {
         title: const Text("Child Dashboard"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
       ),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : Column(
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: const BannerSlider(),
+                    ),
+                  ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -234,7 +243,7 @@ class _ChildDashboardState extends State<ChildDashboard> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blueAccent,
+                              color: Colors.deepPurple,
                             ),
                           ),
                         ],

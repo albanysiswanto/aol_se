@@ -19,21 +19,32 @@ class _NavigationPageState extends State<NavigationPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Pilih halaman Home berdasarkan role
-    final List<Widget> _pages = [
+    // Tentukan halaman dan item navigasi berdasarkan role
+    List<Widget> pages = [
       widget.userRole == 'Parent' ? ParentDashboard() : ChildDashboard(),
       ProfilePage(),
-      ProgressPage(),
     ];
 
+    List<BottomNavigationBarItem> navItems = [
+      BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+    ];
+
+    // Jika role-nya adalah Child, tambahkan halaman dan item Progress
+    if (widget.userRole == 'Child') {
+      pages.add(ProgressPage());
+      navItems.add(
+        BottomNavigationBarItem(
+          icon: Icon(Icons.show_chart),
+          label: 'Progress',
+        ),
+      );
+    }
+
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Progress'),
-        ],
+        items: navItems,
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {

@@ -48,6 +48,7 @@ class _ProgressPageState extends State<ProgressPage> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body:
           isLoading

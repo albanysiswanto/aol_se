@@ -7,6 +7,7 @@ import '../../models/login_request.dart';
 // import '../pages/parent_dashboard.dart';
 import '../pages/register.dart';
 import '../navigation/navigation_page.dart';
+import '../widgets/widget_popup.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -66,6 +67,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         errorMessage = 'Email atau password salah'; // Set pesan error
       });
+      showErrorPopup(context, errorMessage!);
     } finally {
       setState(() => isLoading = false);
     }
@@ -74,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F6F6),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -94,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Login to continue using Quizzo",
+                  "Login to continue using Lapar",
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.grey[600],
