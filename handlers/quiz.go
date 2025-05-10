@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"lapar_backend/config"
@@ -191,7 +192,7 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 			continue
 		}
 
-		quiz.Timer = quiz.Timer / 60 // convert to minutes
+		quiz.Timer = quiz.Timer / 60
 		quizzes = append(quizzes, quiz)
 	}
 
@@ -254,7 +255,6 @@ func GetQuizzesByChildParent(c *fiber.Ctx) error {
 func GetQuizWithQuestions(c *fiber.Ctx) error {
 	quizID := c.Params("id")
 
-	// Ambil data quiz (timer, title, dll)
 	var quiz models.Quiz
 	err := config.DB.QueryRow(`
 		SELECT id, title, description, timer
@@ -291,16 +291,12 @@ func GetQuizWithQuestions(c *fiber.Ctx) error {
 			continue
 		}
 
-		// Pastikan optionsJSON bukan string kosong atau null
 		if optionsJSON != "" {
 			var options []string
-			// Decode JSON options ke []string
 			err := json.Unmarshal([]byte(optionsJSON), &options)
 			if err == nil {
-				// Assign ke q.Options setelah berhasil decode
 				q.Options = options
 			} else {
-				// Tangani error jika JSON tidak bisa didecode
 				continue
 			}
 		}
@@ -450,14 +446,14 @@ func SubmitQuizResult(c *fiber.Ctx) error {
 		})
 	}
 
-	minutesReward := rewardQuiz
+	rewardSeconds := rewardQuiz * 60
 	_, err = config.DB.Exec(`
-    INSERT INTO user_rewards (child_id, total_time, updated_at)
-    VALUES ($1, $2, NOW())
-    ON CONFLICT (child_id) DO UPDATE
-    SET total_time = user_rewards.total_time + EXCLUDED.total_time,
-        updated_at = EXCLUDED.updated_at
-  `, userID, minutesReward)
+	  INSERT INTO user_rewards (child_id, total_time, last_updated_at)
+	  VALUES ($1, $2, NOW())
+	  ON CONFLICT (child_id) DO UPDATE
+	  SET total_time = user_rewards.total_time + EXCLUDED.total_time,
+	      last_updated_at = EXCLUDED.last_updated_at
+	`, userID, rewardSeconds)
 
 	if err != nil {
 		fmt.Println("Error updating rewards:", err)
@@ -469,6 +465,70 @@ func SubmitQuizResult(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message":        "Quiz result submitted",
 		"score":          score,
-		"reward_minutes": minutesReward,
+		"reward_minutes": rewardSeconds,
+	})
+}
+
+func GetScreenTime(c *fiber.Ctx) error {
+	userID := c.Locals("userID").(string)
+
+	var totalTime int
+	var lastUpdatedAt time.Time
+
+	// Query untuk mendapatkan total_time dan last_updated_at
+	fmt.Println("Fetching screen time for userID:", userID) // Log untuk memastikan userID yang digunakan
+
+	err := config.DB.QueryRow(`
+		SELECT total_time, last_updated_at
+		FROM user_rewards
+		WHERE child_id = $1
+	`, userID).Scan(&totalTime, &lastUpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Tidak ada data reward berarti screen time 0
+			fmt.Println("No data found for userID:", userID) // Log jika data tidak ditemukan
+			return c.JSON(fiber.Map{
+				"remaining_seconds": 0,
+			})
+		}
+		// Jika ada error lain, log dan kembalikan pesan error
+		fmt.Println("Error fetching screen time for userID:", userID, "Error:", err)
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Gagal mengambil data screen time",
+		})
+	}
+
+	// Log nilai yang diperoleh dari query
+	fmt.Printf("Fetched data for userID %s: total_time = %d, last_updated_at = %s\n", userID, totalTime, lastUpdatedAt)
+
+	// Pastikan total_time dan lastUpdatedAt sudah ada
+	if totalTime <= 0 || lastUpdatedAt.IsZero() {
+		// Jika nilai tidak valid, kembalikan 0
+		fmt.Println("Invalid data for userID:", userID, "total_time or last_updated_at is not valid.")
+		return c.JSON(fiber.Map{
+			"remaining_seconds": 0,
+		})
+	}
+
+	// Hitung waktu yang telah berlalu sejak lastUpdatedAt
+	elapsed := int(time.Since(lastUpdatedAt).Seconds())
+
+	// Log waktu yang telah berlalu
+	fmt.Printf("Elapsed time since last_updated_at for userID %s: %d seconds\n", userID, elapsed)
+
+	// Hitung waktu yang tersisa
+	remaining := totalTime - elapsed
+
+	// Log waktu yang tersisa
+	fmt.Printf("Remaining time for userID %s: %d seconds\n", userID, remaining)
+
+	// Jika waktu tersisa kurang dari 0, set menjadi 0
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	return c.JSON(fiber.Map{
+		"remaining_seconds": remaining,
 	})
 }

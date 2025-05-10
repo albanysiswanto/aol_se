@@ -65,19 +65,16 @@ func GetParentProfile(c *fiber.Ctx) error {
 		})
 	}
 
-	// Jika ada parent_id (untuk child), simpan ke profile
 	if parentID.Valid {
 		profile.ParentID = parentID.String
 	}
 
-	// Pastikan user adalah Parent
 	if profile.Role != "Parent" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Not authorized to view parent profile",
 		})
 	}
 
-	// Ambil data anak-anaknya
 	rows, err := config.DB.Query(`
 		SELECT id, full_name, birth_date
 		FROM profile

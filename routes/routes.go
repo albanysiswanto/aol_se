@@ -23,6 +23,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/profile/child", handlers.GetChildProfile)
 	api.Get("/profile/parent", handlers.GetParentProfile)
 	api.Get("/progress", handlers.GetChildProgress)
+	api.Get("/screen-time", handlers.GetScreenTime)
 
 	quizGroup := app.Group("/quiz", middleware.JWTMiddleware())
 	quizGroup.Post("/create", handlers.CreateQuiz)

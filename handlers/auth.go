@@ -119,6 +119,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"token": token})
 }
 
+// Ambil data anak-anaknya
 type RegisterRequest struct {
 	FullName    string `json:"full_name"`
 	Email       string `json:"email"`
