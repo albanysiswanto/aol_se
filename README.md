@@ -6,16 +6,16 @@
 
 ### 👨‍👩‍👧 Untuk Orang Tua:
 - Menambahkan anak
-- Mengundang anak melalui token
+- Mengundang anak melalui invite email
 - Menambahkan soal (kuis)
 - Menentukan waktu screen time untuk anak
-- Melihat dan mengatur profil
+- Melihat profil
 
 ### 🧒 Untuk Anak:
 - Menerima undangan token dari orang tua (dikirim melalui email)
 - Mengerjakan soal dari orang tua
 - Melihat progress soal yang telah dikerjakan
-- Melihat dan mengatur profil
+- Melihat profil
 
 ## 🛠 Teknologi yang Digunakan
 - **Flutter** – untuk antarmuka pengguna (Frontend)
